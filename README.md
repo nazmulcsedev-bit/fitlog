@@ -32,37 +32,7 @@ lifts saved for later — all persisted locally so it survives a refresh.
    localStorage; loading spinners, a "nothing here yet" empty state, and a
    custom 404 page round out the experience.
 
-## Getting started
-
-```bash
-npm install
-npm run dev
-```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Project structure
 
-```
-app/
-  page.tsx                  Home: hero + library grid (search + sort)
-  workout/[id]/page.tsx     Workout detail page
-  my-plan/page.tsx          Today's Plan / Saved tabs
-  not-found.tsx             Custom 404
-  layout.tsx, globals.css   Root layout, fonts, Tailwind
-components/
-  Navbar.tsx, Footer.tsx, Logo.tsx
-  WorkoutCard.tsx, StatsRow.tsx
-  PlanProvider.tsx          Plan/Saved state + localStorage
-  ToastProvider.tsx         Toast notifications
-lib/
-  api.ts                    Fetch helpers for the FitLog API
-  types.ts                  Shared TypeScript types
-```
-
-## Notes
-
-- Data comes live from `https://api.abcz.workers.dev/api/fitlog`; no API key
-  required.
-- Today's Plan is capped at 5 lifts per the design brief — adding a 6th shows
-  a toast instead.
