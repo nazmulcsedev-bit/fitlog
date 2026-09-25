@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle, Dumbbell, X } from "lucide-react";
+import { CheckCircle, ChevronDown, Dumbbell, X } from "lucide-react";
 import { getWorkouts } from "@/lib/api";
 import { Workout } from "@/lib/types";
 import { usePlan } from "@/components/PlanProvider";
@@ -11,11 +11,19 @@ import { useToast } from "@/components/ToastProvider";
 import StatsRow from "@/components/StatsRow";
 
 type Tab = "plan" | "saved";
+type SortKey = "duration" | "caloriesBurned" | "rating";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "duration", label: "Duration" },
+  { value: "caloriesBurned", label: "Calories" },
+  { value: "rating", label: "Rating" },
+];
 
 export default function MyPlanPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("plan");
+  const [sortKey, setSortKey] = useState<SortKey>("duration");
   const { plan, saved, removeFromPlan, removeFromSaved, toggleDone, hydrated } =
     usePlan();
   const { showToast } = useToast();
@@ -65,7 +73,10 @@ export default function MyPlanPage() {
   }, [planWorkouts]);
 
   const isLoading = loading || !hydrated;
-  const activeList = tab === "plan" ? planWorkouts.map((p) => p.workout) : savedWorkouts;
+  const activeList = useMemo(() => {
+    const base = tab === "plan" ? planWorkouts.map((p) => p.workout) : savedWorkouts;
+    return [...base].sort((a, b) => b[sortKey] - a[sortKey]);
+  }, [tab, planWorkouts, savedWorkouts, sortKey]);
 
   return (
     <div className="mx-auto max-w-wrap px-5 py-10 sm:px-8">
@@ -97,26 +108,47 @@ export default function MyPlanPage() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="mt-8 flex gap-2 border-b border-line">
-        {(
-          [
-            { key: "plan", label: `Today's Plan (${plan.length})` },
-            { key: "saved", label: `Saved (${saved.length})` },
-          ] as { key: Tab; label: string }[]
-        ).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`-mb-px border-b-2 px-4 py-3 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
-              tab === t.key
-                ? "border-accent text-accent"
-                : "border-transparent text-muted hover:text-white"
-            }`}
+      {/* Tabs + Sort */}
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-line">
+        <div className="flex gap-2">
+          {(
+            [
+              { key: "plan", label: `Today's Plan (${plan.length})` },
+              { key: "saved", label: `Saved (${saved.length})` },
+            ] as { key: Tab; label: string }[]
+          ).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`-mb-px border-b-2 px-4 py-3 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
+                tab === t.key
+                  ? "border-accent text-accent"
+                  : "border-transparent text-muted hover:text-white"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative mb-2 sm:mb-0">
+          <label htmlFor="my-plan-sort" className="sr-only">
+            Sort by
+          </label>
+          <select
+            id="my-plan-sort"
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="w-full appearance-none rounded-md border border-line bg-panel py-2 pl-3 pr-9 font-body text-sm text-white focus:border-accent sm:w-44"
           >
-            {t.label}
-          </button>
-        ))}
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Sort By: {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+        </div>
       </div>
 
       <div className="mt-6">
