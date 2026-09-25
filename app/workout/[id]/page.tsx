@@ -25,7 +25,7 @@ export default function WorkoutDetailPage() {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const { addToPlan, addToSaved } = usePlan();
+  const { isInPlan, isSaved, addToPlan, addToSaved } = usePlan();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -78,15 +78,26 @@ export default function WorkoutDetailPage() {
     );
   }
 
+  const inPlan = isInPlan(workout.id);
+  const saved = isSaved(workout.id);
+
   const handleAddPlan = () => {
+    if (inPlan) {
+      showToast("Already in your plan");
+      return;
+    }
     const result = addToPlan(workout.id);
     if (result === "added") showToast("Added to today's plan");
     else if (result === "full")
       showToast(`Plan is full — max ${PLAN_CAP} lifts for today`);
-    else showToast("Already in today's plan");
+    else showToast("Already in your plan");
   };
 
   const handleSave = () => {
+    if (saved) {
+      showToast("Already saved");
+      return;
+    }
     const result = addToSaved(workout.id);
     if (result === "added") showToast("Saved for later");
     else showToast("Already saved");
@@ -167,17 +178,27 @@ export default function WorkoutDetailPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               onClick={handleAddPlan}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 font-display text-sm font-bold uppercase tracking-wide text-ink transition-transform hover:scale-[1.02]"
+              aria-disabled={inPlan}
+              className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 font-display text-sm font-bold uppercase tracking-wide transition-transform ${
+                inPlan
+                  ? "cursor-not-allowed border border-accent/50 bg-transparent text-accent"
+                  : "bg-accent text-ink hover:scale-[1.02]"
+              }`}
             >
               <ClipboardCheck className="h-4 w-4" />
-              Add to today&apos;s plan
+              {inPlan ? "Already in your plan" : "Add to today's plan"}
             </button>
             <button
               onClick={handleSave}
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-line px-5 py-3 font-display text-sm font-bold uppercase tracking-wide text-white transition-colors hover:border-accent hover:text-accent"
+              aria-disabled={saved}
+              className={`inline-flex items-center justify-center gap-2 rounded-md border px-5 py-3 font-display text-sm font-bold uppercase tracking-wide transition-colors ${
+                saved
+                  ? "cursor-not-allowed border-accent/50 text-accent"
+                  : "border-line text-white hover:border-accent hover:text-accent"
+              }`}
             >
               <Bookmark className="h-4 w-4" />
-              Save for later
+              {saved ? "Saved" : "Save for later"}
             </button>
           </div>
         </div>
